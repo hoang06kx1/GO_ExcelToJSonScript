@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/tealeg/xlsx"
 )
@@ -25,7 +26,16 @@ type station struct {
 	Note       string
 }
 
+type distanceType struct {
+	LineName            string
+	Position            string
+	Distance            int
+	Incremental         int
+	ReversedIncremental int
+}
+
 type stationsType []station
+type distancesType []distanceType
 
 func main() {
 	excelFileName := "tram.xlsx"
@@ -35,10 +45,10 @@ func main() {
 	}
 
 	var stations stationsType
-	// create station list from first sheet
+	// 1. Create station list from first sheet
 	for i, row := range xlFile.Sheets[0].Rows[1:] {
 		// iterate through all struct fields and get corresponding data from excel
-		if len(row.Cells[0].String()) == 0 {
+		if len(strings.TrimSpace(row.Cells[0].String())) == 0 {
 			continue
 		}
 		station := station{}
@@ -67,10 +77,40 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%s \n", stationsJSON)
 	err = ioutil.WriteFile("stations.json", stationsJSON, 0644)
 	if err != nil {
 		panic(err)
 	}
-	println(len(stations))
+
+	// 2. Create distance from second sheet
+	var distances distancesType
+	var distance distanceType
+	for _, row := range xlFile.Sheets[1].Rows[1:] {
+		// iterate through all struct fields and get corresponding data from excel
+
+		if len(strings.TrimSpace(row.Cells[0].String())) == 0 && len(strings.TrimSpace(row.Cells[2].String())) == 0 {
+			continue
+		}
+		if len(strings.TrimSpace(row.Cells[0].String())) > 0 { // name row
+			distance = distanceType{}
+			distance.LineName = row.Cells[0].String()
+			distance.Position = row.Cells[1].String()
+			distances = append(distances, distance)
+		} else {
+			distances[len(distances)-1].Distance, err = row.Cells[2].Int()
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	distancesJSON, err := json.Marshal(distances)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s \n", distancesJSON)
+	err = ioutil.WriteFile("distances.json", distancesJSON, 0644)
+	if err != nil {
+		panic(err)
+	}
 }
