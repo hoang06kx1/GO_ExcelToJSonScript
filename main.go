@@ -9,21 +9,23 @@ import (
 )
 
 type station struct {
-	lineName   string
-	position   string
-	ward       string
-	district   string
-	province   string
-	latitude   string
-	longtitude string
-	powerLevel string
-	zone       string
-	team       string
-	height     float64
-	columnType string
-	box        string
-	note       string
+	LineName   string
+	Position   string
+	Ward       string
+	District   string
+	Province   string
+	Latitude   string
+	Longtitude string
+	PowerLevel string
+	Zone       string
+	Team       string
+	Height     float64
+	ColumnType string
+	Box        string
+	Note       string
 }
+
+type stationsType []station
 
 func main() {
 	excelFileName := "tram.xlsx"
@@ -32,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	var stations []station
+	var stations stationsType
 	// create station list from first sheet
 	for i, row := range xlFile.Sheets[0].Rows[1:] {
 		// iterate through all struct fields and get corresponding data from excel
@@ -40,31 +42,33 @@ func main() {
 			continue
 		}
 		station := station{}
-		station.lineName = row.Cells[0].String()
-		station.position = row.Cells[1].String()
-		station.ward = row.Cells[2].String()
-		station.district = row.Cells[3].String()
-		station.province = row.Cells[4].String()
-		station.latitude = row.Cells[5].String()
-		station.longtitude = row.Cells[6].String()
-		station.powerLevel = row.Cells[7].String()
-		station.zone = row.Cells[8].String()
-		station.team = row.Cells[9].String()
-		station.height, err = row.Cells[10].Float()
+		station.LineName = row.Cells[0].String()
+		station.Position = row.Cells[1].String()
+		station.Ward = row.Cells[2].String()
+		station.District = row.Cells[3].String()
+		station.Province = row.Cells[4].String()
+		station.Latitude = row.Cells[5].String()
+		station.Longtitude = row.Cells[6].String()
+		station.PowerLevel = row.Cells[7].String()
+		station.Zone = row.Cells[8].String()
+		station.Team = row.Cells[9].String()
+		station.Height, err = row.Cells[10].Float()
 		if err != nil {
+			station.Height = 0
 			fmt.Printf("Error parsing height of station number %d: %s \n", i, row.Cells[10].String())
 		}
-		station.columnType = row.Cells[11].String()
-		station.box = row.Cells[12].String()
-		station.note = row.Cells[13].String()
+		station.ColumnType = row.Cells[11].String()
+		station.Box = row.Cells[12].String()
+		station.Note = row.Cells[13].String()
 		stations = append(stations, station)
 	}
 
-	jsonStations, err := json.Marshal(stations)
+	stationsJSON, err := json.Marshal(stations)
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("stations.json", jsonStations, 0644)
+	fmt.Printf("%s \n", stationsJSON)
+	err = ioutil.WriteFile("stations.json", stationsJSON, 0644)
 	if err != nil {
 		panic(err)
 	}
